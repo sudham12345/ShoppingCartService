@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  SAM Template for products service
+  
+Globals:
+  Function:
+    Runtime: 'python3.9'
+    Timeout: 60
+    Environment:
+        Variables:
+          POSTGRES_HOST: tinitiate_postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: postgres
+          POSTGRES_USER: tinitiate
+          POSTGRES_PASSWORD: tinitiate
+Resources:
+  ProductGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev 
+
+  GetProductDetailsFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'GetProductDetails.get_records'      
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /product
+            Method: Get
+
+  GetProductListFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'GetProductsList.get_records'      
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /productlist
+            Method: Get

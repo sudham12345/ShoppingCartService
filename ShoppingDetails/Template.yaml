@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  SAM Template for products service
+
+Globals:
+  Function:
+    Runtime: 'python3.9'
+    Timeout: 60
+    Architectures:
+        - x86_64
+    Environment:
+        Variables:
+          POSTGRES_HOST: tinitiate_postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: postgres
+          POSTGRES_USER: tinitiate
+          POSTGRES_PASSWORD: tinitiate
+
+Resources:
+
+  
+  ProductGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev  
+      #Auth:
+      #  Authorizers:
+          #ApiCognitoAuthorizer:
+            # type: apiKey
+            # name: Authorization
+            # in: header
+            # x-amazon-apigateway-authtype: cognito_user_pools
+            # x-amazon-apigateway-authorizer:
+            #   type: cognito_user_pools
+            #   providerARNs:
+            #     - arn:aws:cognito-idp:{region}:{userpoolIdentifier}
+ 
+
+  AddToCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'AddtoCart.add_product'
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /addtocart
+            Method: Post  
+  UpdateCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'UpdateCart.update_product'
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /updatecart
+            Method: post
+  TransferCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'TransferCart.transer_cart'
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /transfercart
+            Method: post
+           # Auth:
+           #   Authorizer: ApiCognitoAuthorizer
+  DeleteFromCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'DeleteCart.delete_records'
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /deletecart
+            Method: Get
+  ListCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'ListCart.list_records'
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /listcart
+            Method: Get
+  CheckOutCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'CheckOutCart.checkout_cart'
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ProductGatewayApi
+            Path: /checkoutcart
+            Method: Post
+           # Auth:
+           #   Authorizer: ApiCognitoAuthorizer
