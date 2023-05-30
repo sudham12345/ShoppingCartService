@@ -1,9 +1,9 @@
-import requests
+#import requests
 import psycopg2
 import json
 import os
 import EventValidate
-# import cognitojwt
+#import cognitojwt
 from decimal import Decimal
 from datetime import date
 
@@ -76,18 +76,16 @@ def add_product(event,context):
 
         jwtToken = event["headers"].get("Authorization")
 
-        if jwtToken:
-          
+        if jwtToken:        
             try:
                 verifiedUser = cognitojwt.decode(
-                jwt_token, os.environ["AWS_REGION"], os.environ["USERPOOL_ID"]
-                )
+                jwt_token, os.environ['AWS_REGION'], os.environ['USERPOOL_ID'])
+                
             except (cognitojwt.CognitoJWTException, ValueError):
                 verifiedUser = {}
 
             userName = verifiedUser.get("sub")
         """
-
 
         cursor = conn.cursor()
 

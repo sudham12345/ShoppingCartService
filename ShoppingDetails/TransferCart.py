@@ -1,10 +1,9 @@
-import requests
 import psycopg2
 import json
 import os
-import EventValidate
+import boto3
 from decimal import Decimal
-from datetime import date
+
 
 def transer_cart(event,context):
     
@@ -53,7 +52,10 @@ def transer_cart(event,context):
                 user=os.environ['POSTGRES_USER'],
                 password=os.environ['POSTGRES_PASSWORD']
             )   
-    
+
+        sqs = boto3.resource("sqs")
+        queue = sqs.Queue(os.environ["CART_DELETE_SQS_QUEUE"])
+
         cursor = conn.cursor()
         
         userName = parameters['userName']
@@ -78,6 +80,7 @@ def transer_cart(event,context):
             conn.commit()
 
             #post to SQS Queue to delete from shoppingcart.cart
+            #queue.send_message(MessageBody=json.dumps(row, default=str))
         
         response = {
                 "statusCode": 200,                

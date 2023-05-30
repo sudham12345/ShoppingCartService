@@ -31,8 +31,7 @@ def checkout_cart(event,context):
             )   
     
         cursor = conn.cursor()
-
-        #userId = parameters['userId']
+       
         query = "select user_id from shoppingcart.user where TRIM(user_name)=TRIM(%s)"
         cursor.execute(query,(userName,))
         userId = cursor.fetchall()        

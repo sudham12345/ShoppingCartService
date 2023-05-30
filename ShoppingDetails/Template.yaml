@@ -16,6 +16,7 @@ Globals:
           POSTGRES_DB: postgres
           POSTGRES_USER: tinitiate
           POSTGRES_PASSWORD: tinitiate
+          
 
 Resources:
 
@@ -41,30 +42,45 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:      
       Handler: 'AddtoCart.add_product'
+      #Environment:
+        #Variables:
+          #AWS_REGION :
+          #USERPOOL_ID:
+      Layers:
+        - !Ref DependencyLayer
       Events:
-        ApiGet:
+        ApiPost:
           Type: Api
           Properties:
             RestApiId: !Ref ProductGatewayApi
             Path: /addtocart
             Method: Post  
+
   UpdateCartFunction:
     Type: 'AWS::Serverless::Function'
     Properties:      
       Handler: 'UpdateCart.update_product'
+      Layers:
+        - !Ref DependencyLayer
       Events:
-        ApiGet:
+        ApiPost:
           Type: Api
           Properties:
             RestApiId: !Ref ProductGatewayApi
             Path: /updatecart
             Method: post
+
   TransferCartFunction:
     Type: 'AWS::Serverless::Function'
     Properties:      
       Handler: 'TransferCart.transer_cart'
+      Layers:
+        - !Ref DependencyLayer
+      Environment:
+        Variables:
+          CART_DELETE_SQS_QUEUE: !Ref CartDeleteSQSQueue 
       Events:
-        ApiGet:
+        ApiPost:
           Type: Api
           Properties:
             RestApiId: !Ref ProductGatewayApi
@@ -72,21 +88,13 @@ Resources:
             Method: post
            # Auth:
            #   Authorizer: ApiCognitoAuthorizer
-  DeleteFromCartFunction:
-    Type: 'AWS::Serverless::Function'
-    Properties:      
-      Handler: 'DeleteCart.delete_records'
-      Events:
-        ApiGet:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ProductGatewayApi
-            Path: /deletecart
-            Method: Get
+ 
   ListCartFunction:
     Type: 'AWS::Serverless::Function'
     Properties:      
       Handler: 'ListCart.list_records'
+      Layers:
+        - !Ref DependencyLayer
       Events:
         ApiGet:
           Type: Api
@@ -94,12 +102,15 @@ Resources:
             RestApiId: !Ref ProductGatewayApi
             Path: /listcart
             Method: Get
+
   CheckOutCartFunction:
     Type: 'AWS::Serverless::Function'
     Properties:      
       Handler: 'CheckOutCart.checkout_cart'
+      Layers:
+        - !Ref DependencyLayer
       Events:
-        ApiGet:
+        ApiPost:
           Type: Api
           Properties:
             RestApiId: !Ref ProductGatewayApi
@@ -107,3 +118,35 @@ Resources:
             Method: Post
            # Auth:
            #   Authorizer: ApiCognitoAuthorizer
+
+  DeleteFromCartFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:      
+      Handler: 'DeleteCart.delete_records'
+      Layers:
+        - !Ref DependencyLayer
+      Events:
+        GetFromSQS:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt CartDeleteSQSQueue.Arn
+            BatchSize: 5
+    
+  CartDeleteSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 20
+      RedrivePolicy:
+        deadLetterTargetArn:
+          !GetAtt CartDeleteSQSDLQ.Arn
+        maxReceiveCount: 5
+
+  CartDeleteSQSDLQ:
+    Type: AWS::SQS::Queue
+  
+  DependencyLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: dependencies/
+      CompatibleRuntimes:
+        - python3.9
